@@ -7,20 +7,31 @@ const {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const events = [];
+
 app.use(express.json());
 
 const schema = buildSchema(`
-    type RootQuery {
-      events: [String!]!
+    type Event {
+      _id: ID!
+      title: String!
+      description: String!
+      price: Float!
+      date: String!
     }
 
-    type Event {
-      name: String,
-      location: String,
+    input EventInput {
+      title: String!
+      description: String!
+      price: Float!
+    }
+
+    type RootQuery {
+      events: [Event!]!
     }
 
     type RootMutation {
-      createEvent(name: String!, location: String!): Event
+      createEvent(input: EventInput): Event
     }
 
     schema {
@@ -29,18 +40,22 @@ const schema = buildSchema(`
     }
   `)
 
-  class Event {
-    constructor(name, location) {
-      this.name = name;
-      this.location = location;
-    }
+class Event {
+  constructor({title, description, price}) {
+    this._id = Math.random().toString();
+    this.title = title;
+    this.description = description;
+    this.price = price;
+    this.date = new Date().toISOString();
   }
+}
 
 const root = {
-  events: () =>['Coding', 'Singing', 'Dancing'],
+  events: () => events,
   createEvent: (args) => {
-    const { name, location } = args;
-    return new Event(name, location);
+    const event = new Event(args.input);
+    events.push(event);
+    return event;
   }
 }
 
